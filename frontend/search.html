@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts | Search</title>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+    <nav>
+        <a href="/">
+            [ Home ]
+        </a>
+        <a href="/contacts">
+            [ Your Contacts ]
+        </a>
+        <a href="/search">
+            [ Search ]
+        </a>
+        <a href="/profile">
+            [ Profile ]
+        </a>
+    </nav>
+    <main>
+        <form>
+            <input type="search" name="search">
+            <select name="search-type">
+                <option value="name">name</option>
+                <option value="tel">tel</option>
+                <option value="email">email</option>
+                <option value="website">website</option>
+                <option value="description">description</option>
+            </select>
+            <button type="submit">Search</button>
+        </form>
+        <ol></ol>
+    </main>
+    <script>
+        const searchForm = document.querySelector("form")
+        const dataList = document.querySelector("ol")
+
+        const searchType = document.querySelector("[name=search-type]")
+        const search = document.querySelector("[name=search]")
+
+        searchType.value = localStorage.getItem("last-search-type-value") ?? "name"
+        search.value = localStorage.getItem("last-search-value") ?? ""
+
+        searchType.addEventListener("change", e => {
+            localStorage.setItem("last-search-type-value", e.target.value)
+        })
+        search.addEventListener("change", e => {
+            localStorage.setItem("last-search-value", e.target.value)
+        })
+
+        searchForm.onsubmit = async e => {
+            e.preventDefault();
+            const fd = new FormData(e.target)
+            const searchValue = fd.get("search")
+            const searchType = fd.get("search-type")
+
+            try {
+                const res = await fetch(`/api/search?${new URLSearchParams([["search", searchValue], ["search-type", searchType]])}`)
+                // [[id, value, name]]
+                const data = await res.json()
+                console.log(data);
+
+                dataList.innerHTML = data.length == 0 ? "<li>[no results]</li>" : ""
+                for (let i = 0; i < data.length; i++) {
+                    const nextItem = document.createElement("a")
+
+                    nextItem.href = `/user?id=${data[i][0]}`
+
+                    nextItem.innerText = `[${data[i][1]}] ${data[i][2]}`
+
+                    dataList.appendChild(
+                        document.createElement("li")
+                            .appendChild(nextItem)
+                    )
+                }
+            } catch (error) {
+                alert(error)
+            }
+        }
+
+        if (localStorage.getItem("last-search-value"))
+            searchForm.onsubmit({ preventDefault: () => { }, target: searchForm })
+    </script>
+</body>
+
+</html>

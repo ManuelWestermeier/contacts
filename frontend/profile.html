@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile | Home</title>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+    <nav>
+        <a href="/">
+            [ Home ]
+        </a>
+        <a href="/contacts">
+            [ Your Contacts ]
+        </a>
+        <a href="/search">
+            [ Search ]
+        </a>
+        <a href="/profile">
+            [ Profile ]
+        </a>
+    </nav>
+    <main>
+        <p>
+            Login
+        </p>
+        <form>
+            <input type="number" step="1" placeholder="user id" name="user-id" title="user-id">
+            <input type="password" name="user-password" placeholder="password" title="password">
+            <button type="submit">
+                Login
+            </button>
+        </form>
+        <p>
+            Create Account
+        </p>
+        <form>
+            <input type="password" name="user-password" placeholder="password" title="password">
+            <button type="submit">
+                Create Acount
+            </button>
+        </form>
+    </main>
+    <script>
+        async function init() {
+            const [loginUserInput, loginPasswordInput, createAccountPassword] = document.querySelectorAll("input")
+            const lastLoginValues = JSON.parse(localStorage.getItem("contacts-last-login-values") || '["","",""]')
+
+            document.querySelectorAll("input").forEach((inpElem, i) => {
+                inpElem.value = lastLoginValues[i]
+                inpElem.addEventListener("change", e => {
+                    lastLoginValues[i] = e.target.value
+                    localStorage.setItem("contacts-last-login-values", JSON.stringify(lastLoginValues))
+                })
+            })
+
+            const url = new URL(document.location)
+            const userId = url.searchParams.get("user-id")
+            const password = url.searchParams.get("user-password")
+
+            if (!url.searchParams.get("user-password")) return
+
+            const rootElem = document.querySelector("main")
+
+            if (url.searchParams.get("user-id")) {
+                const isAuth = await fetch("/api/is-auth" + document.location.search).then(res => res.json())
+                if (!isAuth) return alert("wrong user-id or password")
+
+                rootElem.innerHTML = `<p id="user-name"></p><br>
+        <input id="user-tel"></input><br>
+        <input id="user-email"></input><br>
+        <input id="user-website"></input><br>
+        <textarea id="user-description"></textarea><br>
+        <button>Send</button>`;
+
+                const data = await fetch("/api/user-data?id=" + encodeURIComponent(
+                    url.searchParams.get("user-id")
+                )).then(res => res.json())
+                const userDataKeys = ["name", "tel", "email", "website", "description"];
+
+                userDataKeys.forEach((key, i) => {
+                    const elem = document.getElementById(`user-${key}`)
+                    elem.value = data[i]
+                })
+            } else {
+                const userId = await fetch("/api/create-account" + document.location.hash).then(res => res.json())
+                url.searchParams.set("user-id", userId)
+                document.location = url
+            }
+        }
+        init()
+    </script>
+</body>
+
+</html>

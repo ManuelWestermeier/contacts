@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contacts | Your Contacts</title>
+    <link rel="stylesheet" href="/index.css">
+</head>
+
+<body>
+    <nav>
+        <a href="/">
+            [ Home ]
+        </a>
+        <a href="/contacts">
+            [ Your Contacts ]
+        </a>
+        <a href="/search">
+            [ Search ]
+        </a>
+        <a href="/profile">
+            [ Profile ]
+        </a>
+    </nav>
+    <main>
+        <ol>
+
+        </ol>
+    </main>
+    <script>
+        const userList = document.querySelector("ol")
+
+        async function init() {
+            userList.innerHTML = ""
+            const contacts = JSON.parse((localStorage.getItem("contacts-contacts") || "[]"))
+
+            if (contacts.length == 0) return userList.innerHTML = "<li>[ No results ]</li>"
+
+            const contactNames = await fetch(`/api/get-user-names?u=${encodeURIComponent(localStorage.getItem("contacts-contacts") || "[]")}`)
+                .then(res => res.json())
+
+            for (let index = 0; index < contacts.length; index++) {
+                const listItem = document.createElement("a")
+
+                listItem.innerText = contactNames[index]
+                listItem.href = `/user?id=${contacts[index]}`
+
+                const li = document.createElement("li")
+                li.appendChild(listItem)
+
+                const removeButton = document.createElement("button")
+                removeButton.innerText = "Remove"
+                removeButton.addEventListener("click", e => {
+                    contacts.splice(index, 1)
+                    localStorage.setItem("contacts-contacts", JSON.stringify(contacts))
+                    init()
+                })
+                li.appendChild(removeButton)
+
+                userList.appendChild(li)
+            }
+        }
+
+        init()
+    </script>
+</body>
+
+</html>
