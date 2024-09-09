@@ -73,12 +73,35 @@ export default function API_HANDLER(res, send, url, pathParts) {
     send("application/json", isAuth);
   } else if (pathParts[2] == "create-account") {
     const password = url.searchParams.get("user-password") + "";
-    const hashedPassword = createHash("sha256")
-      .update(Buffer.from(password))
-      .digest("hex");
+    const hashedPassword = createHash("sha256").update(password).digest("hex");
     users.push(userDataKeys);
-    send("application/json", users.length - 1);
+    send("application/json", String(users.length - 1));
     passwords.push(hashedPassword);
+  } else if (pathParts[2] == "change") {
+    const userId = parseInt(url.searchParams.get("user-id"));
+    const password = url.searchParams.get("user-password");
+
+    if (userId < 0 || userId > passwords.length) {
+      return res.end("error:");
+    }
+
+    const isAuth =
+      createHash("sha256").update(password).digest("hex") == passwords[userId];
+
+    if (!isAuth) {
+      return res.send("NOT auth");
+    }
+
+    const key = userDataKeys.indexOf(url.searchParams.get("key") || "");
+    const value = url.searchParams.get("value") || "";
+
+    if (key == -1 || !value) {
+      return res.end("error:");
+    }
+
+    users[userId][key] = value;
+
+    res.end("OK");
   } else {
     res.end("error:");
   }

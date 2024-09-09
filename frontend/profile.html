@@ -50,6 +50,7 @@
             const lastLoginValues = JSON.parse(localStorage.getItem("contacts-last-login-values") || '["","",""]')
 
             document.querySelectorAll("input").forEach((inpElem, i) => {
+                if (i > 2) return
                 inpElem.value = lastLoginValues[i]
                 inpElem.addEventListener("change", e => {
                     lastLoginValues[i] = e.target.value
@@ -69,6 +70,10 @@
                 const isAuth = await fetch("/api/is-auth" + document.location.search).then(res => res.json())
                 if (!isAuth) return alert("wrong user-id or password")
 
+                const data = await fetch("/api/user-data?id=" + encodeURIComponent(
+                    url.searchParams.get("user-id")
+                )).then(res => res.json())
+
                 rootElem.innerHTML = `<p id="user-name"></p><br>
         <input id="user-tel"></input><br>
         <input id="user-email"></input><br>
@@ -76,17 +81,24 @@
         <textarea id="user-description"></textarea><br>
         <button>Send</button>`;
 
-                const data = await fetch("/api/user-data?id=" + encodeURIComponent(
-                    url.searchParams.get("user-id")
-                )).then(res => res.json())
                 const userDataKeys = ["name", "tel", "email", "website", "description"];
 
                 userDataKeys.forEach((key, i) => {
                     const elem = document.getElementById(`user-${key}`)
                     elem.value = data[i]
+
+                    elem.addEventListener("change", e => {
+                        const search = new URLSearchParams(document.location.search)
+
+                        search.set("key", key)
+                        search.set("value", e.target.value)
+
+                        fetch("/api/change?" + search)
+                    })
                 })
             } else {
-                const userId = await fetch("/api/create-account" + document.location.hash).then(res => res.json())
+                //navigate to the user page
+                const userId = await fetch("/api/create-account" + document.location.search).then(res => res.json())
                 url.searchParams.set("user-id", userId)
                 document.location = url
             }

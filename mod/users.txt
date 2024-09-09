@@ -40,5 +40,12 @@
       "email",
       "website",
       "description"
+   ],
+   [
+      "name",
+      "tel",
+      "email",
+      "website",
+      "description"
    ]
 ]
